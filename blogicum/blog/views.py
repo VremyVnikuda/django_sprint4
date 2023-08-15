@@ -211,10 +211,8 @@ class CommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
     def test_func(self):
         comment = self.get_object()
-        return (
-            self.request.user == comment.author or
-            self.request.user.is_staff
-        )
+        return self.request.user == comment.author \
+            or self.request.user.is_staff
 
     def get_success_url(self):
         post_id = self.kwargs['post_id']
