@@ -1,5 +1,4 @@
-from typing import Any, Dict, Optional
-from django.db import models
+from typing import Any, Dict
 from django.http.response import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect
 from .models import Post, Category, Comment
@@ -148,7 +147,8 @@ class EditPostView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 
     def handle_no_permission(self):
         post = self.get_object()
-        return HttpResponseRedirect(reverse_lazy('blog:post_detail', args=[post.pk]))
+        return HttpResponseRedirect(reverse_lazy('blog:post_detail',
+                                                 args=[post.pk]))
 
     def get_object(self, queryset=None):
         return get_object_or_404(self.model, pk=self.kwargs[self.pk_url_kwarg])
@@ -212,7 +212,10 @@ class CommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
     def test_func(self):
         comment = self.get_object()
-        return self.request.user == comment.author or self.request.user.is_staff
+        return (
+            self.request.user == comment.author or
+            self.request.user.is_staff
+        )
 
     def get_success_url(self):
         post_id = self.kwargs['post_id']
