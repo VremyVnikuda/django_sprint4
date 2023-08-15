@@ -15,7 +15,6 @@ from django.http import Http404
 
 POST_PER_PAGE: int = 10
 
-
 User = get_user_model()
 
 
