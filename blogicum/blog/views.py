@@ -1,4 +1,5 @@
-from typing import Any, Dict
+from typing import Any, Dict, Optional
+from django.db import models
 from django.http.response import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect
 from .models import Post, Category, Comment
@@ -193,7 +194,7 @@ class CommentUpdateView(LoginRequiredMixin, UpdateView):
     form_class = CommentForm
     template_name = 'blog/comment.html'
 
-    def get_object(self, queryset=None):
+    def get_object(self):
         post_id = self.kwargs.get('post_id')
         comment_id = self.kwargs.get('comment_id')
         comment = get_object_or_404(
@@ -217,8 +218,3 @@ class CommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     def get_success_url(self):
         post_id = self.kwargs['post_id']
         return reverse_lazy('blog:post_detail', args=[post_id])
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['post_id'] = self.kwargs['post_id']
-        return context

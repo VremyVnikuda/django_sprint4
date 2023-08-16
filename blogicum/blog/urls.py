@@ -29,5 +29,4 @@ urlpatterns = [
      path('posts/<int:post_id>/delete_comment/<int:comment_id>/',
           views.CommentDeleteView.as_view(), name='delete_comment'),
 ]
-
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
