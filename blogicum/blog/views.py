@@ -1,5 +1,4 @@
-from typing import Any, Dict, Optional
-from django.db import models
+from typing import Any, Dict
 from django.http.response import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect
 from .models import Post, Category, Comment
