@@ -1,4 +1,3 @@
-from typing import Any, Dict
 from django.http.response import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect
 from django.utils import timezone
@@ -70,7 +69,9 @@ class CategoryPostsListView(ListView):
 
     def get_queryset(self, **kwargs):
         category_slug = self.kwargs['category_slug']
-        self.category = get_object_or_404(Category, slug=category_slug, is_published=True)
+        self.category = get_object_or_404(Category,
+                                          slug=category_slug,
+                                          is_published=True)
 
         return Post.objects.filter(
             category=self.category,
