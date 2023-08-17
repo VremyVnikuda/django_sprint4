@@ -1,21 +1,26 @@
 from typing import Any, Dict
 from django.http.response import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect
-from .models import Post, Category, Comment
 from django.utils import timezone
 from django.views.generic import (DeleteView, DetailView, CreateView,
                                   ListView, UpdateView)
 from django.contrib.auth import get_user_model
-from .forms import CustomUserForm, CommentForm, PostForm
 from django.urls import reverse_lazy
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db.models import Count
-from django.contrib.auth.mixins import UserPassesTestMixin
 from django.http import Http404
+
+from .models import Post, Category, Comment
+from .forms import CustomUserForm, CommentForm, PostForm
 
 POST_PER_PAGE: int = 10
 
 User = get_user_model()
+
+
+class CommentSuccessUrlMixin:
+    def get_success_url(self):
+        return reverse_lazy('blog:post_detail', args=[self.object.post.pk])
 
 
 class IndexListView(ListView):
@@ -42,17 +47,12 @@ class PostDetailView(DetailView):
             context = self.get_context_data(object=self.object)
             return self.render_to_response(context)
 
-        if not self.object.is_published:
-            raise Http404("This post is not published.")
+        if self.object.is_published and self.object.category.is_published \
+           and self.object.pub_date <= timezone.now():
+            context = self.get_context_data(object=self.object)
+            return self.render_to_response(context)
 
-        if not self.object.category.is_published:
-            raise Http404()
-
-        if self.object.pub_date > timezone.now():
-            raise Http404()
-
-        context = self.get_context_data(object=self.object)
-        return self.render_to_response(context)
+        raise Http404("This post is not available.")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -71,15 +71,11 @@ class CategoryPostsListView(ListView):
         category_slug = self.kwargs['category_slug']
         self.category = get_object_or_404(Category, slug=category_slug)
 
-        if not self.category.is_published:
-            raise Http404()
-
-        now = timezone.now()
-
+        # Remove the check for category.is_published
         return Post.objects.filter(
             category=self.category,
             is_published=True,
-            pub_date__lte=now
+            pub_date__lte=timezone.now()
         ).order_by("-pub_date")
 
     def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
@@ -174,7 +170,8 @@ class DeletePostView(LoginRequiredMixin, DeleteView):
         return context
 
 
-class CommentCreateView(LoginRequiredMixin, CreateView):
+class CommentCreateView(LoginRequiredMixin, CommentSuccessUrlMixin,
+                        CreateView):
     model = Comment
     form_class = CommentForm
 
@@ -184,11 +181,9 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
         form.instance.author = self.request.user
         return super().form_valid(form)
 
-    def get_success_url(self):
-        return reverse_lazy('blog:post_detail', args=[self.object.post.pk])
 
-
-class CommentUpdateView(LoginRequiredMixin, UpdateView):
+class CommentUpdateView(LoginRequiredMixin, CommentSuccessUrlMixin,
+                        UpdateView):
     model = Comment
     form_class = CommentForm
     template_name = 'blog/comment.html'
@@ -199,9 +194,6 @@ class CommentUpdateView(LoginRequiredMixin, UpdateView):
         comment = get_object_or_404(
             Comment, post__pk=post_id, pk=comment_id, author=self.request.user)
         return comment
-
-    def get_success_url(self):
-        return reverse_lazy('blog:post_detail', args=[self.object.post.pk])
 
 
 class CommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
