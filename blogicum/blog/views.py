@@ -66,19 +66,19 @@ class PostDetailView(DetailView):
 class CategoryPostsListView(ListView):
     paginate_by = POST_PER_PAGE
     template_name = 'blog/category.html'
+    model = Post
 
     def get_queryset(self, **kwargs):
         category_slug = self.kwargs['category_slug']
-        self.category = get_object_or_404(Category, slug=category_slug)
+        self.category = get_object_or_404(Category, slug=category_slug, is_published=True)
 
-        # Remove the check for category.is_published
         return Post.objects.filter(
             category=self.category,
             is_published=True,
             pub_date__lte=timezone.now()
         ).order_by("-pub_date")
 
-    def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
+    def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['category'] = self.category
         return context
