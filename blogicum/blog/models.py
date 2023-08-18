@@ -3,6 +3,8 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
+WORD_COUNT = 256
+
 
 class PublishedModel(models.Model):
     is_published = models.BooleanField(
@@ -21,7 +23,7 @@ class PublishedModel(models.Model):
 
 class Category(PublishedModel):
     title = models.CharField(
-        max_length=256,
+        max_length=WORD_COUNT,
         verbose_name='Заголовок'
     )
     description = models.TextField(
@@ -30,9 +32,10 @@ class Category(PublishedModel):
     slug = models.SlugField(
         unique=True,
         verbose_name='Идентификатор',
-        help_text='Идентификатор страницы для URL; разрешены символы латиницы,\
-        цифры, дефис и подчёркивание.'
-    )
+        help_text='Идентификатор страницы для URL; '
+                  'разрешены символы латиницы, '
+                  'цифры, дефис и подчёркивание.'
+        )
 
     class Meta:
         verbose_name = 'категория'
@@ -44,7 +47,7 @@ class Category(PublishedModel):
 
 class Location(PublishedModel):
     name = models.CharField(
-        max_length=256,
+        max_length=WORD_COUNT,
         verbose_name='Название места'
     )
     is_published = models.BooleanField(
@@ -63,7 +66,7 @@ class Location(PublishedModel):
 
 class Post(PublishedModel):
     title = models.CharField(
-        max_length=256,
+        max_length=WORD_COUNT,
         verbose_name='Заголовок'
     )
     text = models.TextField(
@@ -71,8 +74,9 @@ class Post(PublishedModel):
     )
     pub_date = models.DateTimeField(
         verbose_name='Дата и время публикации',
-        help_text='Если установить дату и время в будущем — можно делать \
-        отложенные публикации.'
+        help_text='Если установить дату и время '
+                  'в будущем — можно делать'
+                  'отложенные публикации.'
     )
     author = models.ForeignKey(
         User,

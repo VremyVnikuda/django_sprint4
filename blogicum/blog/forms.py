@@ -1,8 +1,8 @@
 from django import forms
-from .models import Post, Comment
-
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserChangeForm
+
+from .models import Post, Comment
 
 User = get_user_model()
 
@@ -10,7 +10,8 @@ User = get_user_model()
 class PostForm(forms.ModelForm):
     class Meta:
         model = Post
-        fields = ('title', 'text', 'image', 'pub_date', 'category', 'location')
+        fields = '__all__'
+        exclude = ('author',)
         widgets = {
             'pub_date': forms.DateInput(attrs={'type': 'date'}),
         }

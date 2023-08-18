@@ -31,26 +31,23 @@ class IndexListView(ListView):
             pub_date__lte=timezone.now(),
             is_published=True,
             category__is_published=True
-        ).annotate(comment_count=Count('comments')).order_by("-pub_date")
+        ).annotate(comment_count=Count('comments')).order_by('-pub_date')
 
 
-class PostDetailView(DetailView):
+class PostDetailView(UserPassesTestMixin, DetailView):
     template_name = 'blog/detail.html'
     model = Post
     pk_url_kwarg = 'id'
 
-    def get(self, request, *args, **kwargs):
-        self.object = self.get_object()
+    def test_func(self):
+        self.object = get_object_or_404(self.model,
+                                        pk=self.kwargs[self.pk_url_kwarg])
+        return (self.object.author == self.request.user or
+                (self.object.is_published and
+                 self.object.category.is_published and
+                 self.object.pub_date <= timezone.now()))
 
-        if self.object.author == self.request.user:
-            context = self.get_context_data(object=self.object)
-            return self.render_to_response(context)
-
-        if self.object.is_published and self.object.category.is_published \
-           and self.object.pub_date <= timezone.now():
-            context = self.get_context_data(object=self.object)
-            return self.render_to_response(context)
-
+    def handle_no_permission(self):
         raise Http404("This post is not available.")
 
     def get_context_data(self, **kwargs):
@@ -204,8 +201,8 @@ class CommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
     def test_func(self):
         comment = self.get_object()
-        return self.request.user == comment.author \
-            or self.request.user.is_staff
+        return (self.request.user == comment.author
+                or self.request.user.is_staff)
 
     def get_success_url(self):
         post_id = self.kwargs['post_id']
