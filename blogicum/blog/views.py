@@ -42,10 +42,10 @@ class PostDetailView(UserPassesTestMixin, DetailView):
     def test_func(self):
         self.object = get_object_or_404(self.model,
                                         pk=self.kwargs[self.pk_url_kwarg])
-        return (self.object.author == self.request.user or
-                (self.object.is_published and
-                 self.object.category.is_published and
-                 self.object.pub_date <= timezone.now()))
+        return (self.object.author == self.request.user
+                or (self.object.is_published and
+                    self.object.category.is_published and
+                    self.object.pub_date <= timezone.now()))
 
     def handle_no_permission(self):
         raise Http404("This post is not available.")
